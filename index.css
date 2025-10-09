@@ -193,8 +193,8 @@ body {
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-columns: 100px 1fr 100px;
-  grid-template-rows: 100px 1fr 100px;
+  grid-template-columns: 120px 1fr 120px;
+  grid-template-rows: 120px 1fr 120px;
   position: relative;
 }
 
@@ -297,6 +297,13 @@ body {
     border-color: var(--accent-color);
 }
 
+/* Specific layout for vertical players (2 & 4) */
+/* This makes the header items (name, score) appear side-by-side after rotation, giving them more room. */
+.player-2 .player-header,
+.player-4 .player-header {
+    flex-direction: column;
+    gap: 8px;
+}
 
 /* Player Area Rotations */
 .player-1 { grid-area: 3 / 2 / 4 / 3; }
@@ -336,6 +343,18 @@ body {
     color: var(--primary-text-color);
 }
 
+.round-counter {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: var(--surface-color);
+    color: var(--secondary-text-color);
+    border: 1px solid var(--border-color);
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    z-index: 5;
+}
 
 .dice-container {
   display: flex;
@@ -457,6 +476,9 @@ body {
 
 .player-summary-name {
     font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 .player-summary-score {
     font-weight: bold;
@@ -466,6 +488,16 @@ body {
     font-size: 0.8rem;
     color: var(--secondary-text-color);
     margin-right: 0.5rem;
+}
+
+.badge-second-chance {
+    background-color: #FFD700;
+    color: var(--background-color);
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-weight: bold;
+    white-space: nowrap;
 }
 
 
@@ -524,6 +556,40 @@ body {
     text-align: center;
 }
 
+.second-chance-prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background-color: rgba(3, 218, 198, 0.1);
+    border: 1px solid var(--accent-color);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 350px;
+    text-align: center;
+    animation: pop-in 0.3s ease-out;
+}
+
+.second-chance-prompt p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.second-chance-prompt .second-chance-rules {
+    font-size: 0.8rem;
+    color: var(--secondary-text-color);
+}
+
+.second-chance-prompt .btn-group {
+    width: 100%;
+    justify-content: center;
+}
+
+.second-chance-prompt .btn-group .btn {
+    flex-grow: 1;
+}
+
 
 /* Animation */
 @keyframes roll {
@@ -552,8 +618,8 @@ body {
 
 @media (max-width: 800px) and (min-width: 601px) {
   .game-board {
-    grid-template-columns: 90px 1fr 90px;
-    grid-template-rows: 90px 1fr 90px;
+    grid-template-columns: 100px 1fr 100px;
+    grid-template-rows: 100px 1fr 100px;
   }
   .player-name { font-size: 1.1rem; }
   .player-score { font-size: 1.3rem; }
@@ -563,8 +629,8 @@ body {
 
 @media (max-width: 600px) {
   .game-board {
-    grid-template-columns: 75px 1fr 75px;
-    grid-template-rows: 75px 1fr 75px;
+    grid-template-columns: 85px 1fr 85px;
+    grid-template-rows: 85px 1fr 85px;
   }
   .player-name { font-size: 1rem; }
   .player-score { font-size: 1.2rem; }

@@ -14,7 +14,14 @@ const PlayerSummary = ({ player }: { player: Player }) => {
     const mainScore = player.score - totalBonus;
     return (
         <div className="player-summary">
-            <span className="player-summary-name">{player.name}</span>
+            <span className="player-summary-name">
+                {player.name}
+                {player.secondChanceSuccesses.map((points, index) => (
+                    <span key={index} className="badge-second-chance">
+                        شانس مجدد: +{points}
+                    </span>
+                ))}
+            </span>
             <span className="player-summary-score">
                 {player.score} امتیاز
                 <span className="score-detail"> (امتیاز: {mainScore} | جایزه: {totalBonus})</span>
@@ -34,6 +41,14 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
     const [gameMessage, setGameMessage] = useState('');
     const [showExitConfirm, setShowExitConfirm] = useState(false);
     const [bonusMessage, setBonusMessage] = useState('');
+    
+    // State for the "Second Chance" feature
+    const [showSecondChancePrompt, setShowSecondChancePrompt] = useState(false);
+    const [awaitingSecondRoll, setAwaitingSecondRoll] = useState(false);
+    const [secondChanceInfo, setSecondChanceInfo] = useState<{ initialScore: number; playerIndex: number } | null>(null);
+    const [isFinalRound, setIsFinalRound] = useState(false); // "Final Round" now means "Second Chance is Active"
+    const [roundStartPlayerIndex, setRoundStartPlayerIndex] = useState(0);
+
 
     useEffect(() => {
         const initialPlayers: Player[] = settings.playerNames.map((name, i) => ({
@@ -41,98 +56,202 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
             score: 0,
             isCPU: i >= settings.numPlayers,
             history: [],
+            secondChanceSuccesses: [],
         }));
         setPlayers(initialPlayers);
         setDiceValues(Array(settings.numDice).fill(1));
-        setCurrentPlayerIndex(getRandomInt(0, initialPlayers.length - 1));
+        const initialPlayerIndex = getRandomInt(0, initialPlayers.length - 1);
+        setCurrentPlayerIndex(initialPlayerIndex);
+        setRoundStartPlayerIndex(initialPlayerIndex);
     }, [settings]);
 
+    // This effect now manages the activation of the "Second Chance" feature for both game modes.
+    useEffect(() => {
+        if (gameOver || players.length === 0) return;
+
+        if (settings.winCondition === 'rounds') {
+            // In rounds mode, active on the last round.
+            if (currentRound === settings.winValue && !isFinalRound) {
+                setIsFinalRound(true);
+            }
+        } else if (settings.winCondition === 'score') {
+            // In score mode, active if any player is >= 80% of target, inactive if all are below.
+            const shouldBeActive = players.some(p => p.score >= settings.winValue * 0.8);
+            if (shouldBeActive !== isFinalRound) {
+                setIsFinalRound(shouldBeActive);
+            }
+        }
+    }, [players, currentRound, settings, gameOver, isFinalRound]);
+
+
+    // Update game message based on current turn state
     useEffect(() => {
         if (gameOver || !players[currentPlayerIndex]) return;
-        setGameMessage(`نوبت ${players[currentPlayerIndex].name}`);
-    }, [currentPlayerIndex, players, gameOver]);
 
+        if (!awaitingSecondRoll && !showSecondChancePrompt) {
+            if (isFinalRound) {
+                setGameMessage(`دور آخر! نوبت ${players[currentPlayerIndex].name}`);
+            } else {
+                setGameMessage(`نوبت ${players[currentPlayerIndex].name}`);
+            }
+        }
+    }, [currentPlayerIndex, players, gameOver, awaitingSecondRoll, showSecondChancePrompt, isFinalRound]);
+
+
+    // Handle CPU turns
     useEffect(() => {
-        if (players.length === 0 || gameOver) return;
-
+        if (gameOver || players.length === 0) return;
         const currentPlayer = players[currentPlayerIndex];
-        if (currentPlayer.isCPU) {
+
+        // Scenario 1: CPU needs to decide on the second chance
+        if (showSecondChancePrompt && currentPlayer.isCPU) {
+            setTimeout(() => {
+                const decision = Math.random() < 0.5; // 50% chance to accept
+                handleSecondChanceDecision(decision);
+            }, 2000);
+            return; // Wait for decision, don't proceed to roll
+        }
+
+        // Scenario 2: CPU needs to perform a roll (either first or the re-roll after deciding)
+        if (currentPlayer.isCPU && !isRolling && !showSecondChancePrompt) {
             setTimeout(() => {
                 handleRollDice();
             }, 1500);
         }
-    }, [currentPlayerIndex, players, gameOver]);
+    }, [currentPlayerIndex, players, gameOver, showSecondChancePrompt, isRolling, awaitingSecondRoll]);
 
+
+    const endTurn = (updatedPlayers: Player[], lastPlayerIndex: number) => {
+        let isGameOver = false;
+        const nextIndex = (lastPlayerIndex + 1) % updatedPlayers.length;
+
+        // Check if the game-ending condition is met.
+        const winConditionMet = 
+            (settings.winCondition === 'rounds' && isFinalRound) ||
+            (settings.winCondition === 'score' && updatedPlayers.some(p => p.score >= settings.winValue));
+            
+        if (winConditionMet && nextIndex === roundStartPlayerIndex) {
+            isGameOver = true;
+        }
+
+        if (isGameOver) {
+            const maxScore = Math.max(...updatedPlayers.map(p => p.score));
+            const potentialWinners = updatedPlayers.filter(p => p.score === maxScore);
+            setWinners(potentialWinners);
+            setGameOver(true);
+            setPlayers(updatedPlayers);
+        } else {
+            if (nextIndex === roundStartPlayerIndex) {
+                setCurrentRound(prev => prev + 1);
+            }
+            setPlayers(updatedPlayers);
+            setCurrentPlayerIndex(nextIndex);
+        }
+        
+        setIsRolling(false);
+        setAwaitingSecondRoll(false);
+        setSecondChanceInfo(null);
+        setShowSecondChancePrompt(false);
+    };
+    
+    const handleSecondChanceDecision = (accepted: boolean) => {
+        setShowSecondChancePrompt(false);
+        if (!secondChanceInfo) return;
+
+        if (accepted) {
+            setAwaitingSecondRoll(true);
+            setGameMessage(`${players[currentPlayerIndex].name} شانس مجدد را انتخاب کرد!`);
+        } else {
+            // The score for the first roll has already been applied in handleRollDice.
+            // We just need to end the current player's turn.
+            endTurn(players, secondChanceInfo.playerIndex);
+        }
+    };
 
     const handleRollDice = () => {
-        if (isRolling || gameOver) return;
+        if (isRolling || gameOver || showSecondChancePrompt) return;
 
         setIsRolling(true);
         const newDiceValues = Array.from({ length: settings.numDice }, () => getRandomInt(1, 6));
         
         setTimeout(() => {
-            const { baseScore, bonus, bonusMessage } = calculateScoreAndBonus(newDiceValues);
+            const { baseScore, bonus, bonusMessage: newBonusMessage } = calculateScoreAndBonus(newDiceValues);
             const totalRoundScore = baseScore + bonus;
             
             setDiceValues(newDiceValues);
-            setGameMessage(`${players[currentPlayerIndex].name} امتیاز ${totalRoundScore} آورد!`);
             
-            if (bonusMessage) {
-                setBonusMessage(bonusMessage);
+            if (newBonusMessage) {
+                setBonusMessage(newBonusMessage);
                 setTimeout(() => setBonusMessage(''), 2000);
             }
-            
-            setTimeout(() => {
+
+            if (awaitingSecondRoll && secondChanceInfo) {
+                // Second roll (the gamble)
+                const previousScore = secondChanceInfo.initialScore;
+                let scoreChange = 0;
+                let wonWithChance = false;
+
+                if (totalRoundScore > previousScore) {
+                    scoreChange = totalRoundScore * 2;
+                    setGameMessage(`${players[currentPlayerIndex].name} با شانس مجدد ${scoreChange} امتیاز گرفت!`);
+                    wonWithChance = true;
+                } else {
+                    scoreChange = -totalRoundScore * 2;
+                    setGameMessage(`${players[currentPlayerIndex].name} با شانس مجدد ${Math.abs(scoreChange)} امتیاز از دست داد!`);
+                }
+
+                setTimeout(() => {
+                    const updatedPlayers = players.map((player, index) => {
+                        if (index === currentPlayerIndex) {
+                            const newTotalScore = player.score - previousScore + scoreChange; // Reverse original score, apply new one
+                            const newSuccesses = wonWithChance
+                                ? [...player.secondChanceSuccesses, scoreChange - previousScore]
+                                : player.secondChanceSuccesses;
+                            
+                            return {
+                                ...player,
+                                score: Math.max(0, newTotalScore),
+                                history: [...player.history, { score: baseScore, bonus }],
+                                secondChanceSuccesses: newSuccesses,
+                            };
+                        }
+                        return player;
+                    });
+                    endTurn(updatedPlayers, currentPlayerIndex);
+                }, 1000);
+
+            } else {
+                // First roll
                 const updatedPlayers = players.map((player, index) => {
                     if (index === currentPlayerIndex) {
-                        return {
-                            ...player,
-                            score: player.score + totalRoundScore,
-                            history: [...player.history, { score: baseScore, bonus }],
-                        };
+                        return { ...player, score: player.score + totalRoundScore, history: [...player.history, { score: baseScore, bonus }] };
                     }
                     return player;
                 });
-
-                const isLastPlayer = currentPlayerIndex === updatedPlayers.length - 1;
-                let isGameOver = false;
-                let potentialWinners: Player[] = [];
-
-                if (isLastPlayer) { 
-                    if (settings.winCondition === 'rounds' && currentRound >= settings.winValue) {
-                        isGameOver = true;
-                    } else if (settings.winCondition === 'score') {
-                        const hasReachedTarget = updatedPlayers.some(p => p.score >= settings.winValue);
-                        if (hasReachedTarget) {
-                            isGameOver = true;
-                        }
-                    }
-
-                    if (isGameOver) {
-                        const maxScore = Math.max(...updatedPlayers.map(p => p.score));
-                        if (maxScore > 0) {
-                            potentialWinners = updatedPlayers.filter(p => p.score === maxScore);
-                        }
-                    }
-                }
                 
-                setIsRolling(false);
+                // Check if this player is the FIRST to reach the win score, triggering the final lap
+                const isFirstToReachWinScore = settings.winCondition === 'score' &&
+                    updatedPlayers[currentPlayerIndex].score >= settings.winValue &&
+                    players.every(p => p.score < settings.winValue);
 
-                if (isGameOver) {
-                    setWinners(potentialWinners);
-                    setGameOver(true);
-                    setPlayers(updatedPlayers);
-                } else {
-                    const nextIndex = (currentPlayerIndex + 1) % updatedPlayers.length;
-                    if (nextIndex === 0) { 
-                        setCurrentRound(prev => prev + 1);
-                    }
-                    setPlayers(updatedPlayers);
-                    setCurrentPlayerIndex(nextIndex);
+                if (isFirstToReachWinScore) {
+                    setRoundStartPlayerIndex(currentPlayerIndex);
                 }
 
-            }, 1000);
-
+                // Offer second chance if the mode is active (managed by the useEffect)
+                if (isFinalRound) {
+                    setGameMessage(`${players[currentPlayerIndex].name} امتیاز ${totalRoundScore} آورد!`);
+                    setSecondChanceInfo({ initialScore: totalRoundScore, playerIndex: currentPlayerIndex });
+                    setShowSecondChancePrompt(true);
+                    setPlayers(updatedPlayers); 
+                    setIsRolling(false); 
+                } else {
+                    setGameMessage(`${players[currentPlayerIndex].name} امتیاز ${totalRoundScore} آورد!`);
+                    setTimeout(() => {
+                        endTurn(updatedPlayers, currentPlayerIndex);
+                    }, 1000);
+                }
+            }
         }, 700);
     };
     
@@ -144,7 +263,6 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
 
     const currentPlayer = players[currentPlayerIndex];
     const losers = players.filter(p => !winners.find(w => w.name === p.name));
-
 
     return (
         <div className="game-board">
@@ -173,7 +291,7 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
                         {winners.length > 0 && (
                              <div className="results-section">
                                 <h4>🏆 برنده(ها)</h4>
-                                {winners.map(p => <PlayerSummary key={p.name} player={p} />)}
+                                {winners.sort((a,b) => b.score - a.score).map(p => <PlayerSummary key={p.name} player={p} />)}
                             </div>
                         )}
                        
@@ -210,17 +328,38 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
             ))}
             <div className="center-area">
                 <button className="btn btn-exit" onClick={handleExit}>خروج</button>
+                <div className="round-counter">
+                    {settings.winCondition === 'rounds'
+                        ? `دور ${currentRound} / ${settings.winValue}`
+                        : `دور ${currentRound}`
+                    }
+                </div>
                 <div className="dice-container">
                     {diceValues.map((val, i) => <Dice key={i} value={val} isRolling={isRolling} />)}
                 </div>
-                <button 
-                    className="btn roll-btn" 
-                    onClick={handleRollDice}
-                    disabled={isRolling || currentPlayer?.isCPU || gameOver}>
-                    پرتاب تاس
-                </button>
+                
+                {showSecondChancePrompt && !currentPlayer.isCPU ? (
+                    <div className="second-chance-prompt">
+                        <p>امتیاز شما در این دور: {secondChanceInfo?.initialScore}. شانس مجدد میخواهید؟</p>
+                         <p className="second-chance-rules">
+                            برد: امتیاز × ۲ | باخت: امتیاز × ۲ (منفی)
+                        </p>
+                        <div className="btn-group">
+                            <button className="btn" onClick={() => handleSecondChanceDecision(true)}>بله</button>
+                            <button className="btn btn-secondary" onClick={() => handleSecondChanceDecision(false)}>خیر</button>
+                        </div>
+                    </div>
+                ) : (
+                    <button 
+                        className="btn roll-btn" 
+                        onClick={handleRollDice}
+                        disabled={isRolling || currentPlayer?.isCPU || gameOver || showSecondChancePrompt}>
+                        {awaitingSecondRoll ? 'پرتاب مجدد' : 'پرتاب تاس'}
+                    </button>
+                )}
+
                 <div className="game-info">
-                    {settings.winCondition === 'rounds' ? `دور ${currentRound} از ${settings.winValue}`: gameMessage}
+                     {gameMessage}
                 </div>
             </div>
         </div>
