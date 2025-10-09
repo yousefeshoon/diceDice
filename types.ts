@@ -16,5 +16,6 @@ export interface Player {
     score: number;
     isCPU: boolean;
     history: PlayerHistory[];
-    secondChanceSuccesses: number[];
+    secondChanceHistory: number[];
+    scoreHistory: number[];
 }

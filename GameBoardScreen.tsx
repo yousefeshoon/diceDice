@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dice } from './Dice';
 import { BonusToast } from './BonusToast';
+import { ScoreChart } from './ScoreChart';
 import { getRandomInt, calculateScoreAndBonus } from './gameLogic';
 import type { GameSettings, Player } from './types';
 
@@ -9,19 +10,24 @@ interface GameBoardScreenProps {
     onNewGame: () => void;
 }
 
-const PlayerSummary = ({ player }: { player: Player }) => {
+const PlayerSummary = ({ player, onShowChart }: { player: Player; onShowChart: () => void; }) => {
     const totalBonus = player.history.reduce((sum, h) => sum + h.bonus, 0);
     const mainScore = player.score - totalBonus;
     return (
         <div className="player-summary">
-            <span className="player-summary-name">
-                {player.name}
-                {player.secondChanceSuccesses.map((points, index) => (
-                    <span key={index} className="badge-second-chance">
-                        شانس مجدد: +{points}
-                    </span>
-                ))}
-            </span>
+            <div className="player-summary-details">
+                <span className="player-summary-name">
+                    {player.name}
+                    <button className="btn-chart" onClick={onShowChart} title={`نمودار امتیاز ${player.name}`}>📊</button>
+                </span>
+                 <div className="badges-container">
+                    {player.secondChanceHistory.map((points, index) => (
+                        <span key={index} className={`badge ${points >= 0 ? 'positive' : 'negative'}`}>
+                            شانس مجدد: {points >= 0 ? '+' : ''}{points}
+                        </span>
+                    ))}
+                </div>
+            </div>
             <span className="player-summary-score">
                 {player.score} امتیاز
                 <span className="score-detail"> (امتیاز: {mainScore} | جایزه: {totalBonus})</span>
@@ -48,6 +54,7 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
     const [secondChanceInfo, setSecondChanceInfo] = useState<{ initialScore: number; playerIndex: number; scoreBeforeTurn: number; } | null>(null);
     const [isFinalRound, setIsFinalRound] = useState(false); // "Final Round" now means "Second Chance is Active"
     const [roundStartPlayerIndex, setRoundStartPlayerIndex] = useState(0);
+    const [chartPlayerIndex, setChartPlayerIndex] = useState<number | null>(null);
 
 
     useEffect(() => {
@@ -56,7 +63,8 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
             score: 0,
             isCPU: i >= settings.numPlayers,
             history: [],
-            secondChanceSuccesses: [],
+            secondChanceHistory: [],
+            scoreHistory: [0],
         }));
         setPlayers(initialPlayers);
         setDiceValues(Array(settings.numDice).fill(1));
@@ -121,30 +129,41 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
     }, [currentPlayerIndex, players, gameOver, showSecondChancePrompt, isRolling, awaitingSecondRoll]);
 
 
-    const endTurn = (updatedPlayers: Player[], lastPlayerIndex: number) => {
+    const endTurn = (playersFromLastAction: Player[], lastPlayerIndex: number) => {
+        const playersWithUpdatedHistory = playersFromLastAction.map((p, index) => {
+            if (index === lastPlayerIndex) {
+                const history = p.scoreHistory?.length ? p.scoreHistory : [0];
+                return {
+                    ...p,
+                    scoreHistory: [...history, p.score]
+                };
+            }
+            return p;
+        });
+
         let isGameOver = false;
-        const nextIndex = (lastPlayerIndex + 1) % updatedPlayers.length;
+        const nextIndex = (lastPlayerIndex + 1) % playersWithUpdatedHistory.length;
 
         // Check if the game-ending condition is met.
         const winConditionMet = 
             (settings.winCondition === 'rounds' && isFinalRound) ||
-            (settings.winCondition === 'score' && updatedPlayers.some(p => p.score >= settings.winValue));
+            (settings.winCondition === 'score' && playersWithUpdatedHistory.some(p => p.score >= settings.winValue));
             
         if (winConditionMet && nextIndex === roundStartPlayerIndex) {
             isGameOver = true;
         }
 
         if (isGameOver) {
-            const maxScore = Math.max(...updatedPlayers.map(p => p.score));
-            const potentialWinners = updatedPlayers.filter(p => p.score === maxScore);
+            const maxScore = Math.max(...playersWithUpdatedHistory.map(p => p.score));
+            const potentialWinners = playersWithUpdatedHistory.filter(p => p.score === maxScore);
             setWinners(potentialWinners);
             setGameOver(true);
-            setPlayers(updatedPlayers);
+            setPlayers(playersWithUpdatedHistory);
         } else {
             if (nextIndex === roundStartPlayerIndex) {
                 setCurrentRound(prev => prev + 1);
             }
-            setPlayers(updatedPlayers);
+            setPlayers(playersWithUpdatedHistory);
             setCurrentPlayerIndex(nextIndex);
         }
         
@@ -189,12 +208,10 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
                 // Second roll (the gamble)
                 const previousScore = secondChanceInfo.initialScore;
                 let scoreChange = 0;
-                let wonWithChance = false;
 
                 if (totalRoundScore > previousScore) {
                     scoreChange = totalRoundScore * 2;
                     setGameMessage(`${players[currentPlayerIndex].name} با شانس مجدد ${scoreChange} امتیاز گرفت!`);
-                    wonWithChance = true;
                 } else {
                     scoreChange = -totalRoundScore * 2;
                     setGameMessage(`${players[currentPlayerIndex].name} با شانس مجدد ${Math.abs(scoreChange)} امتیاز از دست داد!`);
@@ -204,16 +221,13 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
                     const updatedPlayers = players.map((player, index) => {
                         if (index === currentPlayerIndex) {
                             const newTotalScore = secondChanceInfo.scoreBeforeTurn + scoreChange;
-                            
-                            const newSuccesses = wonWithChance
-                                ? [...player.secondChanceSuccesses, scoreChange]
-                                : player.secondChanceSuccesses;
+                            const newSecondChanceHistory = [...player.secondChanceHistory, scoreChange];
                             
                             return {
                                 ...player,
-                                score: Math.max(0, newTotalScore),
+                                score: newTotalScore,
                                 history: [...player.history, { score: baseScore, bonus }],
-                                secondChanceSuccesses: newSuccesses,
+                                secondChanceHistory: newSecondChanceHistory,
                             };
                         }
                         return player;
@@ -269,6 +283,12 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
     return (
         <div className="game-board">
             <BonusToast message={bonusMessage} />
+            {chartPlayerIndex !== null && players[chartPlayerIndex] && (
+                <ScoreChart 
+                player={players[chartPlayerIndex]} 
+                onClose={() => setChartPlayerIndex(null)} 
+                />
+            )}
             {showExitConfirm && (
                 <div className="confirm-overlay">
                     <div className="confirm-dialog">
@@ -293,7 +313,10 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
                         {winners.length > 0 && (
                              <div className="results-section">
                                 <h4>🏆 برنده(ها)</h4>
-                                {winners.sort((a,b) => b.score - a.score).map(p => <PlayerSummary key={p.name} player={p} />)}
+                                {winners.sort((a,b) => b.score - a.score).map(p => {
+                                    const playerIndex = players.findIndex(pl => pl.name === p.name);
+                                    return <PlayerSummary key={p.name} player={p} onShowChart={() => setChartPlayerIndex(playerIndex)} />
+                                })}
                             </div>
                         )}
                        
@@ -302,7 +325,10 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
                                 <h4>سایر بازیکنان</h4>
                                  {losers
                                     .sort((a, b) => b.score - a.score)
-                                    .map(p => <PlayerSummary key={p.name} player={p} />)}
+                                    .map(p => {
+                                        const playerIndex = players.findIndex(pl => pl.name === p.name);
+                                        return <PlayerSummary key={p.name} player={p} onShowChart={() => setChartPlayerIndex(playerIndex)} />
+                                    })}
                             </div>
                         )}
                         
@@ -313,7 +339,10 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
             {players.map((player, index) => (
                  <div key={index} className={`player-area player-${index + 1} ${currentPlayerIndex === index ? 'active' : ''}`}>
                     <div className="player-header">
-                        <div className="player-name">{player.name}</div>
+                        <div className="player-name-container">
+                            <div className="player-name">{player.name}</div>
+                            <button className="btn-chart" onClick={() => setChartPlayerIndex(index)} title={`نمودار امتیاز ${player.name}`}>📊</button>
+                        </div>
                         <div className="player-score">{player.score}</div>
                     </div>
                     <div className="scores-box">
