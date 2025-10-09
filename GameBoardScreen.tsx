@@ -45,7 +45,7 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
     // State for the "Second Chance" feature
     const [showSecondChancePrompt, setShowSecondChancePrompt] = useState(false);
     const [awaitingSecondRoll, setAwaitingSecondRoll] = useState(false);
-    const [secondChanceInfo, setSecondChanceInfo] = useState<{ initialScore: number; playerIndex: number } | null>(null);
+    const [secondChanceInfo, setSecondChanceInfo] = useState<{ initialScore: number; playerIndex: number; scoreBeforeTurn: number; } | null>(null);
     const [isFinalRound, setIsFinalRound] = useState(false); // "Final Round" now means "Second Chance is Active"
     const [roundStartPlayerIndex, setRoundStartPlayerIndex] = useState(0);
 
@@ -203,9 +203,10 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
                 setTimeout(() => {
                     const updatedPlayers = players.map((player, index) => {
                         if (index === currentPlayerIndex) {
-                            const newTotalScore = player.score - previousScore + scoreChange; // Reverse original score, apply new one
+                            const newTotalScore = secondChanceInfo.scoreBeforeTurn + scoreChange;
+                            
                             const newSuccesses = wonWithChance
-                                ? [...player.secondChanceSuccesses, scoreChange - previousScore]
+                                ? [...player.secondChanceSuccesses, scoreChange]
                                 : player.secondChanceSuccesses;
                             
                             return {
@@ -222,6 +223,7 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
 
             } else {
                 // First roll
+                const scoreBeforeThisTurn = players[currentPlayerIndex].score;
                 const updatedPlayers = players.map((player, index) => {
                     if (index === currentPlayerIndex) {
                         return { ...player, score: player.score + totalRoundScore, history: [...player.history, { score: baseScore, bonus }] };
@@ -241,7 +243,7 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
                 // Offer second chance if the mode is active (managed by the useEffect)
                 if (isFinalRound) {
                     setGameMessage(`${players[currentPlayerIndex].name} امتیاز ${totalRoundScore} آورد!`);
-                    setSecondChanceInfo({ initialScore: totalRoundScore, playerIndex: currentPlayerIndex });
+                    setSecondChanceInfo({ initialScore: totalRoundScore, playerIndex: currentPlayerIndex, scoreBeforeTurn: scoreBeforeThisTurn });
                     setShowSecondChancePrompt(true);
                     setPlayers(updatedPlayers); 
                     setIsRolling(false); 
