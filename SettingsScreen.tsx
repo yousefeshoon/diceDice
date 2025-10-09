@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { GameSettings } from './types';
+import { getRandomNames } from './names';
 
 const DEFAULT_SETTINGS: Omit<GameSettings, 'playerNames'> & { playerNames: string[] } = {
   numPlayers: 1,
@@ -55,14 +56,21 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onStartGame }) =
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    let finalPlayerNames = Array(4).fill(null);
-    for (let i = 0; i < 4; i++) {
-        if (i < settings.numPlayers) {
-            finalPlayerNames[i] = settings.playerNames[i] || `بازیکن ${i + 1}`;
-        } else {
-            finalPlayerNames[i] = `پردازنده ${i + 1}`;
-        }
-    }
+    
+    // Get the names for human players, providing defaults if empty
+    const humanPlayerNames = settings.playerNames
+      .slice(0, settings.numPlayers)
+      .map((name, index) => name || `بازیکن ${index + 1}`);
+      
+    // Calculate how many CPU players are needed
+    const numCpuPlayers = 4 - settings.numPlayers;
+    
+    // Get random names for the CPU players
+    const cpuPlayerNames = numCpuPlayers > 0 ? getRandomNames(numCpuPlayers) : [];
+    
+    // Combine them into the final list for a total of 4 players
+    const finalPlayerNames = [...humanPlayerNames, ...cpuPlayerNames];
+    
     onStartGame({ ...settings, playerNames: finalPlayerNames });
   };
   

@@ -618,27 +618,43 @@ body {
 
 @media (max-width: 800px) and (min-width: 601px) {
   .game-board {
-    grid-template-columns: 100px 1fr 100px;
-    grid-template-rows: 100px 1fr 100px;
+    grid-template-columns: 110px 1fr 110px;
+    grid-template-rows: 110px 1fr 110px;
   }
-  .player-name { font-size: 1.1rem; }
-  .player-score { font-size: 1.3rem; }
+  .player-area {
+    padding: 0.75rem;
+    gap: 6px;
+  }
+  .player-name { font-size: 1rem; }
+  .player-score { font-size: 1.2rem; }
+  .scores-box { height: 50px; }
   .dice-face { width: 45px; height: 45px; }
   .roll-btn { width: 135px; }
 }
 
 @media (max-width: 600px) {
   .game-board {
-    grid-template-columns: 85px 1fr 85px;
-    grid-template-rows: 85px 1fr 85px;
+    grid-template-columns: 90px 1fr 90px;
+    grid-template-rows: 90px 1fr 90px;
   }
-  .player-name { font-size: 1rem; }
-  .player-score { font-size: 1.2rem; }
+  .player-area {
+    padding: 0.5rem;
+    gap: 4px;
+  }
+  .player-name { font-size: 0.9rem; }
+  .player-score { font-size: 1.1rem; }
   .dice-face { width: 40px; height: 40px; }
   .dice-face .dot { width: 8px; height: 8px; }
   .roll-btn { width: 120px; }
-  .player-header { flex-direction: column; gap: 8px; }
-  .scores-box { max-width: 130px; height: 50px; }
+  .scores-box {
+    height: 44px;
+  }
+  /* For side players, prevent children from taking 100% width in a flex-row (post-rotation) */
+  .player-2 .player-header,
+  .player-4 .player-header {
+    width: auto;
+    flex-shrink: 0;
+  }
   .game-over-card { padding: 1.5rem; }
   .game-over-card h2 { font-size: 2rem; }
   .winner-announcement { font-size: 1.2rem; }
