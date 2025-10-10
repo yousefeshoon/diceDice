@@ -5,9 +5,9 @@ import { getRandomNames } from './names';
 const DEFAULT_SETTINGS: Omit<GameSettings, 'playerNames'> & { playerNames: string[] } = {
   numPlayers: 1,
   playerNames: ['بازیکن ۱', 'بازیکن ۲', 'بازیکن ۳', 'بازیکن ۴'],
-  numDice: 2,
-  winCondition: 'rounds',
-  winValue: 10,
+  numDice: 5,
+  winCondition: 'score',
+  winValue: 300,
 };
 
 const SETTINGS_KEY = 'dice-game-settings';
