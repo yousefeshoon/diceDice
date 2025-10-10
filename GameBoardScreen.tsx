@@ -58,10 +58,18 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
     const [showSecondChancePrompt, setShowSecondChancePrompt] = useState(false);
     const [awaitingSecondRoll, setAwaitingSecondRoll] = useState(false);
     const [secondChanceInfo, setSecondChanceInfo] = useState<{ initialScore: number; playerIndex: number; scoreBeforeTurn: number; } | null>(null);
-    const [isFinalRound, setIsFinalRound] = useState(false); // "Final Round" now means "Second Chance is Active"
+    const [isAutomaticSecondChanceActive, setIsAutomaticSecondChanceActive] = useState(false); // Renamed from isFinalRound
     const [roundStartPlayerIndex, setRoundStartPlayerIndex] = useState(0);
     const [chartPlayerIndex, setChartPlayerIndex] = useState<number | null>(null);
 
+    // New state for player-initiated second chance
+    const [playerInitiatedSecondChanceActive, setPlayerInitiatedSecondChanceActive] = useState(false);
+    const [showVotePrompt, setShowVotePrompt] = useState(false);
+    const [voteInfo, setVoteInfo] = useState<{
+        requesterIndex: number;
+        votes: { [voterIndex: number]: 'yes' | 'no' };
+    } | null>(null);
+    const [secondChanceEndIndex, setSecondChanceEndIndex] = useState<number | null>(null);
 
     useEffect(() => {
         const initialPlayers: Player[] = settings.playerNames.map((name, i) => ({
@@ -71,6 +79,7 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
             history: [],
             secondChanceHistory: [],
             scoreHistory: [0],
+            lastVoteInitiatedRound: 0,
         }));
         setPlayers(initialPlayers);
         setDiceValues(Array(settings.numDice).fill(1));
@@ -79,60 +88,105 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
         setRoundStartPlayerIndex(initialPlayerIndex);
     }, [settings]);
 
-    // This effect now manages the activation of the "Second Chance" feature for both game modes.
+    // This effect manages the activation of the automatic "Second Chance" feature.
     useEffect(() => {
         if (gameOver || players.length === 0) return;
 
         if (settings.winCondition === 'rounds') {
-            // In rounds mode, active on the last round.
-            if (currentRound === settings.winValue && !isFinalRound) {
-                setIsFinalRound(true);
+            if (currentRound === settings.winValue && !isAutomaticSecondChanceActive) {
+                setIsAutomaticSecondChanceActive(true);
             }
         } else if (settings.winCondition === 'score') {
-            // In score mode, active if any player is >= 80% of target, inactive if all are below.
             const shouldBeActive = players.some(p => p.score >= settings.winValue * 0.8);
-            if (shouldBeActive !== isFinalRound) {
-                setIsFinalRound(shouldBeActive);
+            if (shouldBeActive !== isAutomaticSecondChanceActive) {
+                setIsAutomaticSecondChanceActive(shouldBeActive);
             }
         }
-    }, [players, currentRound, settings, gameOver, isFinalRound]);
+    }, [players, currentRound, settings, gameOver, isAutomaticSecondChanceActive]);
 
 
     // Update game message based on current turn state
     useEffect(() => {
-        if (gameOver || !players[currentPlayerIndex]) return;
+        if (gameOver || !players[currentPlayerIndex] || showVotePrompt) return;
 
         if (!awaitingSecondRoll && !showSecondChancePrompt) {
-            if (isFinalRound) {
+            if (isAutomaticSecondChanceActive) {
                 setGameMessage(`دور آخر! نوبت ${players[currentPlayerIndex].name}`);
             } else {
                 setGameMessage(`نوبت ${players[currentPlayerIndex].name}`);
             }
         }
-    }, [currentPlayerIndex, players, gameOver, awaitingSecondRoll, showSecondChancePrompt, isFinalRound]);
+    }, [currentPlayerIndex, players, gameOver, awaitingSecondRoll, showSecondChancePrompt, isAutomaticSecondChanceActive, showVotePrompt]);
 
 
     // Handle CPU turns
     useEffect(() => {
-        if (gameOver || players.length === 0) return;
+        if (gameOver || players.length === 0 || showVotePrompt) return;
         const currentPlayer = players[currentPlayerIndex];
+        if (!currentPlayer?.isCPU) return;
 
-        // Scenario 1: CPU needs to decide on the second chance
-        if (showSecondChancePrompt && currentPlayer.isCPU) {
-            setTimeout(() => {
+        const handleCpuTurn = () => {
+             // Scenario 1: CPU needs to decide on the second chance
+            if (showSecondChancePrompt) {
                 const decision = Math.random() < 0.5; // 50% chance to accept
                 handleSecondChanceDecision(decision);
-            }, 2000);
-            return; // Wait for decision, don't proceed to roll
+                return; // Wait for decision, don't proceed to roll
+            }
+            // Scenario 2: CPU maybe wants to request a vote
+            const isSecondChanceActiveForRound = isAutomaticSecondChanceActive || playerInitiatedSecondChanceActive;
+            const canRequest = (currentPlayer.lastVoteInitiatedRound === 0 || currentRound - currentPlayer.lastVoteInitiatedRound >= 9) && !isSecondChanceActiveForRound && !showVotePrompt;
+            const isLosing = currentPlayer.score < Math.max(...players.map(p => p.score));
+            if (canRequest && isLosing && Math.random() < 0.15) {
+                handleRequestSecondChance(currentPlayerIndex);
+                return;
+            }
+
+            // Scenario 3: CPU needs to perform a roll (either first or the re-roll after deciding)
+            if (!isRolling && !showSecondChancePrompt) {
+                handleRollDice();
+            }
+        }
+        setTimeout(handleCpuTurn, 1500);
+    }, [currentPlayerIndex, players, gameOver, showSecondChancePrompt, isRolling, awaitingSecondRoll, showVotePrompt]);
+    
+    // Effect to process vote results and trigger CPU votes
+    useEffect(() => {
+        if (!voteInfo) return;
+
+        const processVotes = () => {
+            const yesVotes = Object.values(voteInfo.votes).filter(v => v === 'yes').length;
+            const noVotes = Object.values(voteInfo.votes).filter(v => v === 'no').length;
+
+            if (yesVotes >= 3) {
+                setGameMessage('درخواست شانس مجدد پذیرفته شد!');
+                setPlayerInitiatedSecondChanceActive(true);
+                setSecondChanceEndIndex(voteInfo.requesterIndex);
+                setShowVotePrompt(false);
+                setVoteInfo(null);
+            } else if (noVotes >= 2) {
+                setGameMessage('درخواست شانس مجدد رد شد.');
+                setShowVotePrompt(false);
+                setVoteInfo(null);
+            }
         }
 
-        // Scenario 2: CPU needs to perform a roll (either first or the re-roll after deciding)
-        if (currentPlayer.isCPU && !isRolling && !showSecondChancePrompt) {
-            setTimeout(() => {
-                handleRollDice();
-            }, 1500);
+        const handleCpuVote = (cpuIndex: number) => {
+             setTimeout(() => {
+                const decision = Math.random() < 0.6 ? 'yes' : 'no'; // CPUs are slightly agreeable
+                handleCastVote(cpuIndex, decision);
+            }, 1000 + Math.random() * 1500);
         }
-    }, [currentPlayerIndex, players, gameOver, showSecondChancePrompt, isRolling, awaitingSecondRoll]);
+
+        // Trigger votes for any CPUs that haven't voted yet
+        players.forEach((player, index) => {
+            if (player.isCPU && !voteInfo.votes[index]) {
+                handleCpuVote(index);
+            }
+        });
+
+        processVotes();
+
+    }, [voteInfo, players]);
 
 
     const endTurn = (playersFromLastAction: Player[], lastPlayerIndex: number) => {
@@ -149,15 +203,26 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
 
         let isGameOver = false;
         const nextIndex = (lastPlayerIndex + 1) % playersWithUpdatedHistory.length;
-
-        // Check if the game-ending condition is met.
-        const winConditionMet = 
-            (settings.winCondition === 'rounds' && isFinalRound) ||
-            (settings.winCondition === 'score' && playersWithUpdatedHistory.some(p => p.score >= settings.winValue));
-            
-        if (winConditionMet && nextIndex === roundStartPlayerIndex) {
-            isGameOver = true;
+        
+        // Deactivate player-initiated second chance if a full circle has been completed.
+        if (playerInitiatedSecondChanceActive && nextIndex === secondChanceEndIndex) {
+            setPlayerInitiatedSecondChanceActive(false);
+            setSecondChanceEndIndex(null);
         }
+
+        if (nextIndex === roundStartPlayerIndex) {
+            // Check if game ends after this full round
+             const winConditionMet = 
+                (settings.winCondition === 'rounds' && isAutomaticSecondChanceActive) ||
+                (settings.winCondition === 'score' && playersWithUpdatedHistory.some(p => p.score >= settings.winValue));
+            if (winConditionMet) {
+                isGameOver = true;
+            } else {
+                // Start of a new regular round
+                setCurrentRound(prev => prev + 1);
+            }
+        }
+
 
         if (isGameOver) {
             const maxScore = Math.max(...playersWithUpdatedHistory.map(p => p.score));
@@ -166,9 +231,6 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
             setGameOver(true);
             setPlayers(playersWithUpdatedHistory);
         } else {
-            if (nextIndex === roundStartPlayerIndex) {
-                setCurrentRound(prev => prev + 1);
-            }
             setPlayers(playersWithUpdatedHistory);
             setCurrentPlayerIndex(nextIndex);
         }
@@ -187,14 +249,12 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
             setAwaitingSecondRoll(true);
             setGameMessage(`${players[currentPlayerIndex].name} شانس مجدد را انتخاب کرد!`);
         } else {
-            // The score for the first roll has already been applied in handleRollDice.
-            // We just need to end the current player's turn.
             endTurn(players, secondChanceInfo.playerIndex);
         }
     };
 
     const handleRollDice = () => {
-        if (isRolling || gameOver || showSecondChancePrompt) return;
+        if (isRolling || gameOver || showSecondChancePrompt || showVotePrompt) return;
 
         setIsRolling(true);
         const newDiceValues = Array.from({ length: settings.numDice }, () => getRandomInt(1, 6));
@@ -251,7 +311,6 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
                     return player;
                 });
                 
-                // Check if this player is the FIRST to reach the win score, triggering the final lap
                 const isFirstToReachWinScore = settings.winCondition === 'score' &&
                     updatedPlayers[currentPlayerIndex].score >= settings.winValue &&
                     players.every(p => p.score < settings.winValue);
@@ -260,8 +319,9 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
                     setRoundStartPlayerIndex(currentPlayerIndex);
                 }
 
-                // Offer second chance if the mode is active (managed by the useEffect)
-                if (isFinalRound) {
+                const offerSecondChance = isAutomaticSecondChanceActive || playerInitiatedSecondChanceActive;
+
+                if (offerSecondChance) {
                     setGameMessage(`${players[currentPlayerIndex].name} امتیاز ${totalRoundScore} آورد!`);
                     setSecondChanceInfo({ initialScore: totalRoundScore, playerIndex: currentPlayerIndex, scoreBeforeTurn: scoreBeforeThisTurn });
                     setShowSecondChancePrompt(true);
@@ -276,6 +336,25 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
             }
         }, 700);
     };
+
+    const handleRequestSecondChance = (requesterIndex: number) => {
+        if (isRolling || gameOver || showVotePrompt) return;
+        setPlayers(prev => prev.map((p, i) => i === requesterIndex ? { ...p, lastVoteInitiatedRound: currentRound } : p));
+        setVoteInfo({
+            requesterIndex,
+            votes: { [requesterIndex]: 'yes' }
+        });
+        setShowVotePrompt(true);
+        setGameMessage(`${players[requesterIndex].name} درخواست شانس مجدد داد.`);
+    };
+
+    const handleCastVote = (voterIndex: number, vote: 'yes' | 'no') => {
+        setVoteInfo(prev => {
+            if (!prev || prev.votes[voterIndex]) return prev; // Already voted
+            const newVotes = { ...prev.votes, [voterIndex]: vote };
+            return { ...prev, votes: newVotes };
+        });
+    };
     
     const handleExit = () => setShowExitConfirm(true);
     const confirmExit = () => onNewGame();
@@ -285,6 +364,7 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
 
     const currentPlayer = players[currentPlayerIndex];
     const losers = players.filter(p => !winners.find(w => w.name === p.name));
+    const isSecondChanceActiveForRound = isAutomaticSecondChanceActive || playerInitiatedSecondChanceActive;
 
     return (
         <div className="game-board">
@@ -294,6 +374,33 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
                 player={players[chartPlayerIndex]} 
                 onClose={() => setChartPlayerIndex(null)} 
                 />
+            )}
+            {showVotePrompt && voteInfo && (
+                <div className="vote-overlay">
+                    <div className="vote-prompt">
+                        <h3>درخواست شانس مجدد</h3>
+                        <p>{players[voteInfo.requesterIndex].name} درخواست فعال‌سازی شانس مجدد برای این دور را دارد.</p>
+                        <div className="player-vote-list">
+                            {players.map((p, i) => (
+                                <div key={i} className="player-vote-item">
+                                    <span>{p.name}</span>
+                                    {voteInfo.votes[i] ? (
+                                        <span className={`vote-status ${voteInfo.votes[i]}`}>{voteInfo.votes[i] === 'yes' ? 'بله' : 'خیر'}</span>
+                                    ) : (
+                                        !p.isCPU && i !== voteInfo.requesterIndex ? (
+                                            <div className="vote-actions">
+                                                <button className="btn-vote yes" onClick={() => handleCastVote(i, 'yes')}>بله</button>
+                                                <button className="btn-vote no" onClick={() => handleCastVote(i, 'no')}>خیر</button>
+                                            </div>
+                                        ) : (
+                                            <span className="vote-status pending">در حال تصمیم...</span>
+                                        )
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
             )}
             {showExitConfirm && (
                 <div className="confirm-overlay">
@@ -342,27 +449,57 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
                     </div>
                 </div>
             )}
-            {players.map((player, index) => (
-                 <div key={index} className={`player-area player-${index + 1} ${currentPlayerIndex === index ? 'active' : ''}`}>
-                    <div className="player-header">
-                        <div className="player-name-container">
-                            <div className="player-name">{player.name}</div>
-                            <button className="btn-chart" onClick={() => setChartPlayerIndex(index)} title={`نمودار امتیاز ${player.name}`}>📊</button>
+            {players.map((player, index) => {
+                 const isMyTurn = currentPlayerIndex === index;
+                 const isOnCooldown = player.lastVoteInitiatedRound !== 0 && currentRound - player.lastVoteInitiatedRound < 9;
+                 const canRequestVote = isMyTurn && !isOnCooldown && !isSecondChanceActiveForRound && !showVotePrompt && !gameOver;
+                 
+                 let requestButtonTitle = '';
+                 if (!isMyTurn) {
+                     requestButtonTitle = 'در نوبت شما فعال می‌شود';
+                 } else if (isOnCooldown) {
+                     const roundsLeft = 9 - (currentRound - player.lastVoteInitiatedRound);
+                     requestButtonTitle = `شانس مجدد تا ${roundsLeft} دور دیگر در دسترس نیست`;
+                 } else if (isSecondChanceActiveForRound) {
+                     requestButtonTitle = 'شانس مجدد در این دور فعال است';
+                 } else if (showVotePrompt) {
+                     requestButtonTitle = 'رای‌گیری در جریان است';
+                 } else {
+                     requestButtonTitle = 'درخواست شانس مجدد';
+                 }
+
+                 return (
+                    <div key={index} className={`player-area player-${index + 1} ${currentPlayerIndex === index ? 'active' : ''}`}>
+                        <div className="player-header">
+                            <div className="player-name-container">
+                                <div className="player-name">{player.name}</div>
+                                <button className="btn-chart" onClick={() => setChartPlayerIndex(index)} title={`نمودار امتیاز ${player.name}`}>📊</button>
+                                {!player.isCPU && (
+                                     <button 
+                                        className="btn-request-chance" 
+                                        onClick={() => handleRequestSecondChance(index)} 
+                                        disabled={!canRequestVote}
+                                        title={requestButtonTitle}
+                                    >
+                                        ✨
+                                    </button>
+                                )}
+                            </div>
+                            <div className="player-score">{player.score}</div>
                         </div>
-                        <div className="player-score">{player.score}</div>
-                    </div>
-                    <div className="scores-box">
-                         <div className="round-scores-container">
-                            {player.history.map((h, i) => (
-                                <React.Fragment key={i}>
-                                    <div className="round-score-chip">{h.score}</div>
-                                    {h.bonus > 0 && <div className="round-score-chip bonus">{`+${h.bonus}`}</div>}
-                                </React.Fragment>
-                            ))}
+                        <div className="scores-box">
+                             <div className="round-scores-container">
+                                {player.history.map((h, i) => (
+                                    <React.Fragment key={i}>
+                                        <div className="round-score-chip">{h.score}</div>
+                                        {h.bonus > 0 && <div className="round-score-chip bonus">{`+${h.bonus}`}</div>}
+                                    </React.Fragment>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </div>
-            ))}
+                );
+            })}
             <div className="center-area">
                 <button className="btn btn-exit" onClick={handleExit}>خروج</button>
                 <div className="round-counter">
@@ -370,6 +507,9 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
                         ? `دور ${currentRound} / ${settings.winValue}`
                         : `دور ${currentRound}`
                     }
+                </div>
+                <div className={`second-chance-status ${isSecondChanceActiveForRound ? 'active' : ''}`}>
+                   شانس مجدد {isSecondChanceActiveForRound ? 'فعال' : 'غیرفعال'}
                 </div>
                 <div className="dice-container">
                     {diceValues.map((val, i) => <Dice key={i} value={val} isRolling={isRolling} />)}
@@ -390,7 +530,7 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
                     <button 
                         className="btn roll-btn" 
                         onClick={handleRollDice}
-                        disabled={isRolling || currentPlayer?.isCPU || gameOver || showSecondChancePrompt}>
+                        disabled={isRolling || currentPlayer?.isCPU || gameOver || showSecondChancePrompt || showVotePrompt}>
                         {awaitingSecondRoll ? 'پرتاب مجدد' : 'پرتاب تاس'}
                     </button>
                 )}
