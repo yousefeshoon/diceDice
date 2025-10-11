@@ -5,9 +5,25 @@ import { getRandomNames } from './names';
 const DEFAULT_SETTINGS: Omit<GameSettings, 'playerNames'> & { playerNames: string[] } = {
   numPlayers: 1,
   playerNames: ['بازیکن ۱', 'بازیکن ۲', 'بازیکن ۳', 'بازیکن ۴'],
-  numDice: 2,
-  winCondition: 'rounds',
-  winValue: 10,
+  numDice: 5,
+  winCondition: 'score',
+  winValue: 300,
+};
+
+const SETTINGS_KEY = 'dice-game-settings';
+
+const loadSettings = (): typeof DEFAULT_SETTINGS => {
+  try {
+    const saved = localStorage.getItem(SETTINGS_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Merge with defaults to ensure all keys are present, even if settings format changes
+      return { ...DEFAULT_SETTINGS, ...parsed };
+    }
+  } catch (e) {
+    console.error("Failed to load settings from localStorage", e);
+  }
+  return DEFAULT_SETTINGS;
 };
 
 interface SettingsScreenProps {
@@ -15,7 +31,7 @@ interface SettingsScreenProps {
 }
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onStartGame }) => {
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState(loadSettings);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -57,6 +73,12 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onStartGame }) =
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    } catch (e) {
+      console.error("Failed to save settings to localStorage", e);
+    }
+
     // Get the names for human players, providing defaults if empty
     const humanPlayerNames = settings.playerNames
       .slice(0, settings.numPlayers)

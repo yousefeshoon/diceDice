@@ -12,10 +12,11 @@ export interface PlayerHistory {
 }
 
 export interface Player {
-    name: string;
+    name:string;
     score: number;
     isCPU: boolean;
     history: PlayerHistory[];
     secondChanceHistory: number[];
     scoreHistory: number[];
+    lastVoteInitiatedRound: number;
 }

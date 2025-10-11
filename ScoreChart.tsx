@@ -11,7 +11,7 @@ export const ScoreChart: React.FC<ScoreChartProps> = ({ player, onClose }) => {
 
     const svgWidth = 500;
     const svgHeight = 300;
-    const margin = { top: 20, right: 20, bottom: 40, left: 50 };
+    const margin = { top: 20, right: 20, bottom: 35, left: 40 };
     const chartWidth = svgWidth - margin.left - margin.right;
     const chartHeight = svgHeight - margin.top - margin.bottom;
 
@@ -60,13 +60,13 @@ export const ScoreChart: React.FC<ScoreChartProps> = ({ player, onClose }) => {
                     <h3>روند امتیاز {player.name}</h3>
                     <button className="btn-close" onClick={onClose}>&times;</button>
                 </div>
-                <svg width={svgWidth} height={svgHeight} className="score-chart-svg" aria-label={`نمودار امتیاز برای ${player.name}`}>
+                <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="score-chart-svg" aria-label={`نمودار امتیاز برای ${player.name}`}>
                     <g transform={`translate(${margin.left}, ${margin.top})`}>
                         {/* Y-axis */}
                         <line x1="0" y1="0" x2="0" y2={chartHeight} className="chart-axis" />
                         <text x="-10" y={scoreToY(yMax)} dy=".32em" className="chart-label">{Math.ceil(yMax)}</text>
                         <text x="-10" y={scoreToY(yMin)} dy=".32em" className="chart-label">{Math.floor(yMin)}</text>
-                        <text transform="rotate(-90)" y="-40" x={-chartHeight / 2} dy="1em" className="chart-axis-title">امتیاز</text>
+                        <text transform="rotate(-90)" y="-30" x={-chartHeight / 2} dy="1em" className="chart-axis-title">امتیاز</text>
 
                         {/* Zero-line for reference if it's in view */}
                         {yMin < 0 && yMax > 0 && (
@@ -84,7 +84,7 @@ export const ScoreChart: React.FC<ScoreChartProps> = ({ player, onClose }) => {
                              <text key={index} x={turnToX(index)} y={chartHeight + 15} className="chart-label">{index}</text>
                            )
                         ))}
-                        <text x={chartWidth / 2} y={chartHeight + 35} className="chart-axis-title">نوبت</text>
+                        <text x={chartWidth / 2} y={chartHeight + 30} className="chart-axis-title">نوبت</text>
 
                         {/* Data Line */}
                         {canDrawLine && <polyline points={linePath} className="chart-line" />}
