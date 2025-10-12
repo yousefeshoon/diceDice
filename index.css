@@ -905,6 +905,12 @@ body {
     10%, 90% { opacity: 1; transform: translate(-50%, 0); }
 }
 
+/* =================================== */
+/*            RESPONSIVE STYLES        */
+/* =================================== */
+
+
+/* Tablet */
 @media (max-width: 800px) and (min-width: 601px) {
   .game-board {
     grid-template-columns: 156px 1fr 156px;
@@ -921,34 +927,87 @@ body {
   .roll-btn { width: 135px; }
 }
 
+
+/* Mobile Portrait */
 @media (max-width: 600px) {
+  /* Settings Screen Optimizations */
+  .settings-screen {
+    width: 95%;
+    padding: 1.5rem 1rem;
+    gap: 1.5rem;
+  }
+  .player-inputs {
+    grid-template-columns: 1fr;
+  }
+  .form-group {
+    gap: 0.5rem;
+  }
+  
+  /* Game Board Optimizations */
   .game-board {
-    grid-template-columns: 132px 1fr 132px;
-    grid-template-rows: 90px 1fr 90px;
+    grid-template-columns: 110px 1fr 110px;
+    grid-template-rows: 80px 1fr 80px;
   }
   .player-area {
+    padding: 0.5rem 0.25rem;
+    gap: 2px;
+  }
+  .player-header {
+    gap: 8px;
+  }
+  .player-name { font-size: 0.85rem; }
+  .player-score { font-size: 1rem; }
+  .center-area {
+    gap: 1rem;
+  }
+  .dice-face { 
+    width: 38px; 
+    height: 38px; 
+  }
+  .dice-face .dot { 
+    width: 7px; 
+    height: 7px; 
+  }
+  .roll-btn { 
+    width: 110px; 
+    height: 45px;
     padding: 0.5rem;
-    gap: 4px;
+    font-size: 1.1rem;
   }
-  .player-name { font-size: 0.9rem; }
-  .player-score { font-size: 1.1rem; }
-  .dice-face { width: 40px; height: 40px; }
-  .dice-face .dot { width: 8px; height: 8px; }
-  .roll-btn { width: 120px; }
   .scores-box {
-    height: 44px;
+    height: 42px;
   }
+  .round-score-chip {
+    font-size: 0.75rem;
+    padding: 2px 6px;
+  }
+  .game-info {
+    font-size: 1rem;
+    bottom: 5px;
+  }
+
   /* For side players, prevent children from taking 100% width in a flex-row (post-rotation) */
   .player-2 .player-header,
   .player-4 .player-header {
     width: auto;
     flex-shrink: 0;
   }
+  
+  /* Modals and Overlays Optimizations */
   .game-over-card { padding: 1.5rem; }
   .game-over-card h2 { font-size: 2rem; }
   .winner-announcement { font-size: 1.2rem; }
   .player-summary-score { font-size: 1rem; }
   .score-detail { display: block; margin-top: 4px; margin-right: 0; }
+  .vote-prompt {
+    padding: 1.5rem;
+  }
+  .vote-prompt h3 {
+    font-size: 1.1rem;
+  }
+  .confirm-dialog {
+    padding: 1.5rem;
+  }
 
   /* Chart mobile optimization */
   .chart-container {
@@ -964,11 +1023,86 @@ body {
   .chart-axis-title {
       font-size: 0.8rem;
   }
+}
 
-  .vote-prompt {
-    padding: 1.5rem;
+/* Mobile Landscape */
+@media (max-height: 500px) and (orientation: landscape) {
+  html, body {
+    /* Reduce base font size for compact landscape view */
+    font-size: 14px;
   }
-  .vote-prompt h3 {
+
+  /* Settings Screen */
+  .settings-container {
+    justify-content: flex-start; /* Don't center vertically, allow scrolling */
+    padding-top: 1rem;
+  }
+  .settings-screen {
+    padding: 1rem;
+    gap: 1rem;
+    width: 95%;
+  }
+  .settings-screen h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0;
+  }
+  .btn {
+    padding: 0.75rem;
+    font-size: 1rem;
+  }
+
+  /* Game Board */
+  .game-board {
+    grid-template-rows: 75px 1fr 75px;
+    grid-template-columns: 140px 1fr 140px;
+  }
+  .center-area {
+    gap: 0.5rem;
+  }
+  .dice-container {
+    gap: 0.5rem;
+    min-height: auto;
+  }
+  .dice-face {
+    width: 35px;
+    height: 35px;
+    padding: 4px;
+  }
+  .dice-face .dot {
+    width: 6px;
+    height: 6px;
+  }
+  .roll-btn {
+    height: 40px;
+    width: 120px;
+    font-size: 1rem;
+  }
+  .game-info {
+    position: static; /* Prevent overlap issues */
+    height: auto;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+  }
+  .player-area {
+    padding: 0.5rem;
+    gap: 4px;
+  }
+  .scores-box {
+    height: 38px;
+  }
+  .round-scores-container {
+    padding: 2px 0;
+  }
+  
+  /* Overlays */
+  .game-over-card {
+    padding: 1rem;
+    gap: 1rem;
+  }
+  .game-over-card h2 {
+    font-size: 1.8rem;
+  }
+  .winner-announcement {
     font-size: 1.1rem;
   }
 }
