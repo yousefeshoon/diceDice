@@ -945,7 +945,7 @@ body {
   
   /* Game Board Optimizations */
   .game-board {
-    grid-template-columns: 110px 1fr 110px;
+    grid-template-columns: 125px 1fr 125px;
     grid-template-rows: 80px 1fr 80px;
   }
   .player-area {
