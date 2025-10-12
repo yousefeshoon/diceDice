@@ -451,22 +451,38 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
             )}
             {players.map((player, index) => {
                  const isMyTurn = currentPlayerIndex === index;
-                 const isOnCooldown = player.lastVoteInitiatedRound !== 0 && currentRound - player.lastVoteInitiatedRound < 9;
-                 const canRequestVote = isMyTurn && !isOnCooldown && !isSecondChanceActiveForRound && !showVotePrompt && !gameOver;
+                 const isPlayerOnCooldown = player.lastVoteInitiatedRound !== 0 && currentRound - player.lastVoteInitiatedRound < 9;
+                 const roundsLeft = 9 - (currentRound - player.lastVoteInitiatedRound);
+                 
+                 // Eligibility for the feature in general (not on cooldown)
+                 const isEligible = !isPlayerOnCooldown;
+                 
+                 // Can the button be clicked right now?
+                 const canClick = isMyTurn && !player.isCPU && isEligible && !isSecondChanceActiveForRound && !showVotePrompt && !gameOver;
                  
                  let requestButtonTitle = '';
-                 if (!isMyTurn) {
-                     requestButtonTitle = 'در نوبت شما فعال می‌شود';
-                 } else if (isOnCooldown) {
-                     const roundsLeft = 9 - (currentRound - player.lastVoteInitiatedRound);
-                     requestButtonTitle = `شانس مجدد تا ${roundsLeft} دور دیگر در دسترس نیست`;
-                 } else if (isSecondChanceActiveForRound) {
-                     requestButtonTitle = 'شانس مجدد در این دور فعال است';
-                 } else if (showVotePrompt) {
-                     requestButtonTitle = 'رای‌گیری در جریان است';
+                 let buttonClass = 'btn-request-chance';
+                 
+                 if (isPlayerOnCooldown) {
+                    requestButtonTitle = `در حال شارژ (${roundsLeft} دور باقی مانده)`;
+                    buttonClass += ' on-cooldown';
+                 } else if (isSecondChanceActiveForRound || showVotePrompt || gameOver) {
+                     if(isSecondChanceActiveForRound) requestButtonTitle = 'شانس مجدد در این دور فعال است';
+                     else if(showVotePrompt) requestButtonTitle = 'رای‌گیری در جریان است';
+                     else if(gameOver) requestButtonTitle = 'بازی تمام شده است';
+                     else requestButtonTitle = 'غیرفعال';
                  } else {
-                     requestButtonTitle = 'درخواست شانس مجدد';
+                    // It's available
+                    buttonClass += ' available';
+                    if (player.isCPU) {
+                       requestButtonTitle = 'بازیکن پردازنده';
+                    } else if (isMyTurn) {
+                        requestButtonTitle = 'درخواست شانس مجدد';
+                    } else {
+                        requestButtonTitle = 'آماده (در انتظار نوبت)';
+                    }
                  }
+
 
                  return (
                     <div key={index} className={`player-area player-${index + 1} ${currentPlayerIndex === index ? 'active' : ''}`}>
@@ -474,23 +490,21 @@ export const GameBoardScreen: React.FC<GameBoardScreenProps> = ({ settings, onNe
                             <div className="player-name-container">
                                 <div className="player-name">{player.name}</div>
                                 <button className="btn-chart" onClick={() => setChartPlayerIndex(index)} title={`نمودار امتیاز ${player.name}`}>📊</button>
-                                {!player.isCPU && (
-                                     <button 
-                                        className="btn-request-chance" 
-                                        onClick={() => handleRequestSecondChance(index)} 
-                                        disabled={!canRequestVote}
-                                        title={requestButtonTitle}
-                                    >
-                                        ✨
-                                    </button>
-                                )}
+                                <button 
+                                    className={buttonClass}
+                                    onClick={() => handleRequestSecondChance(index)} 
+                                    disabled={!canClick}
+                                    title={requestButtonTitle}
+                                >
+                                    {isPlayerOnCooldown ? roundsLeft : '✨'}
+                                </button>
                             </div>
                             <div className="player-score">{player.score}</div>
                         </div>
                         <div className="scores-box">
                              <div className="round-scores-container">
-                                {player.history.map((h, i) => (
-                                    <React.Fragment key={i}>
+                                {[...player.history].reverse().map((h, i) => (
+                                    <React.Fragment key={player.history.length - 1 - i}>
                                         <div className="round-score-chip">{h.score}</div>
                                         {h.bonus > 0 && <div className="round-score-chip bonus">{`+${h.bonus}`}</div>}
                                     </React.Fragment>

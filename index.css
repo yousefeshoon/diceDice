@@ -209,7 +209,7 @@ body {
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-columns: 120px 1fr 120px;
+  grid-template-columns: 168px 1fr 168px;
   grid-template-rows: 120px 1fr 120px;
   position: relative;
 }
@@ -260,18 +260,50 @@ body {
     font-size: 1.2rem;
     padding: 0;
     line-height: 1;
-    opacity: 0.6;
-    transition: opacity 0.2s, transform 0.2s;
+    transition: all 0.2s;
 }
-.btn-chart:hover:not(:disabled), .btn-request-chance:hover:not(:disabled) {
+
+/* Chart button has simple opacity */
+.btn-chart {
+    opacity: 0.6;
+}
+.btn-chart:hover {
     opacity: 1;
     transform: scale(1.1);
 }
 
-.btn-request-chance:disabled {
-    opacity: 0.2;
-    cursor: not-allowed;
+/* Second chance button is stateful */
+.btn-request-chance {
+    opacity: 0.3; /* Inactive by default */
+    min-width: 24px;
+    min-height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
+
+.btn-request-chance.available {
+    opacity: 0.8;
+}
+
+.btn-request-chance.available:hover:not(:disabled) {
+    opacity: 1;
+    transform: scale(1.2);
+    text-shadow: 0 0 6px var(--accent-color);
+}
+
+.btn-request-chance:disabled {
+    cursor: not-allowed;
+    /* It will inherit opacity: 0.3 by default */
+}
+
+.btn-request-chance.on-cooldown {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--secondary-text-color);
+    opacity: 0.6; /* Make it a bit more visible than other disabled states */
+}
+
 
 .player-name {
   font-weight: bold;
@@ -293,7 +325,7 @@ body {
     border: 1px solid var(--border-color);
     width: 100%;
     max-width: 200px;
-    height: 60px;
+    height: 65px;
 }
 
 .round-scores-container {
@@ -338,19 +370,11 @@ body {
     border-color: var(--accent-color);
 }
 
-/* Specific layout for vertical players (2 & 4) */
-/* This makes the header items (name, score) appear side-by-side after rotation, giving them more room. */
-.player-2 .player-header,
-.player-4 .player-header {
-    flex-direction: column;
-    gap: 8px;
-}
-
 /* Player Area Rotations */
 .player-1 { grid-area: 3 / 2 / 4 / 3; }
-.player-2 { grid-area: 2 / 1 / 3 / 2; transform: rotate(90deg); }
+.player-2 { grid-area: 2 / 1 / 3 / 2; transform: rotate(-90deg); }
 .player-3 { grid-area: 1 / 2 / 2 / 3; transform: rotate(180deg); }
-.player-4 { grid-area: 2 / 3 / 3 / 4; transform: rotate(-90deg); }
+.player-4 { grid-area: 2 / 3 / 3 / 4; transform: rotate(90deg); }
 
 .center-area {
   grid-area: 2 / 2 / 3 / 3;
@@ -883,7 +907,7 @@ body {
 
 @media (max-width: 800px) and (min-width: 601px) {
   .game-board {
-    grid-template-columns: 110px 1fr 110px;
+    grid-template-columns: 156px 1fr 156px;
     grid-template-rows: 110px 1fr 110px;
   }
   .player-area {
@@ -899,7 +923,7 @@ body {
 
 @media (max-width: 600px) {
   .game-board {
-    grid-template-columns: 90px 1fr 90px;
+    grid-template-columns: 132px 1fr 132px;
     grid-template-rows: 90px 1fr 90px;
   }
   .player-area {
