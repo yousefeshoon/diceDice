@@ -1,75 +1,89 @@
+/* =================================== */
+/*        متغیرهای اصلی و ریشه         */
+/* =================================== */
 :root {
-  --background-color: #121212;
-  --surface-color: #1e1e1e;
-  --primary-text-color: #e0e0e0;
-  --secondary-text-color: #a0a0a0;
-  --accent-color: #03dac6;
-  --accent-color-darker: #018786;
-  --border-color: #333;
-  --disabled-color: #444;
+  /* -- تعریف متغیرهای رنگی برای استفاده در کل برنامه -- */
+  --background-color: #121212; /* رنگ پس‌زمینه اصلی (تیره) */
+  --surface-color: #1e1e1e; /* رنگ سطح کارت‌ها و مودال‌ها */
+  --primary-text-color: #e0e0e0; /* رنگ متن اصلی (روشن) */
+  --secondary-text-color: #a0a0a0; /* رنگ متن ثانویه (خاکستری) */
+  --accent-color: #03dac6; /* رنگ اصلی و تاکیدی (فیروزه‌ای) */
+  --accent-color-darker: #018786; /* نسخه تیره‌تر رنگ تاکیدی برای هاور */
+  --border-color: #333; /* رنگ حاشیه‌ها */
+  --disabled-color: #444; /* رنگ عناصر غیرفعال */
+  
+  /* -- تعریف فونت اصلی برنامه -- */
   --font-family: 'Vazirmatn', sans-serif;
 }
 
+/* =================================== */
+/*        ریست و استایل‌های عمومی       */
+/* =================================== */
 * {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+  box-sizing: border-box; /* تضمین می‌کند که padding و border در اندازه کلی عنصر محاسبه شوند */
+  margin: 0; /* حذف حاشیه پیش‌فرض */
+  padding: 0; /* حذف پدینگ پیش‌فرض */
 }
 
 html, body {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-  overscroll-behavior: none;
+  height: 100%; /* ارتفاع کامل صفحه */
+  width: 100%; /* عرض کامل صفحه */
+  overflow: hidden; /* جلوگیری از اسکرول کلی صفحه */
+  overscroll-behavior: none; /* جلوگیری از رفتارهای ناخواسته اسکرول (مثل رفرش شدن) */
 }
 
 body {
-  font-family: var(--font-family);
-  background-color: var(--background-color);
-  color: var(--primary-text-color);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: right;
+  font-family: var(--font-family); /* اعمال فونت اصلی به کل برنامه */
+  background-color: var(--background-color); /* تنظیم رنگ پس‌زمینه */
+  color: var(--primary-text-color); /* تنظیم رنگ متن */
+  display: flex; /* استفاده از فلکس برای چینش */
+  justify-content: center; /* محتوا در مرکز افقی */
+  align-items: center; /* محتوا در مرکز عمودی */
+  text-align: right; /* متن‌ راست‌چین به صورت پیش‌فرض */
 }
 
 #root {
-  width: 100%;
-  height: 100%;
+  width: 100%; /* عرض کامل */
+  height: 100%; /* ارتفاع کامل */
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
+/* کانتینر اصلی برنامه */
 .app-container {
   width: 100%;
   height: 100%;
-  max-width: 1000px;
-  max-height: 1000px;
+  max-width: 1000px; /* حداکثر عرض */
+  max-height: 1000px; /* حداکثر ارتفاع */
   background-color: var(--background-color);
-  border-radius: 16px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  border-radius: 16px; /* گوشه‌های گرد */
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* سایه برای ایجاد عمق */
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
 }
 
-/* Settings Screen */
+/* =================================== */
+/*           صفحه تنظیمات              */
+/* =================================== */
 .settings-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: column; /* چینش عمودی */
   align-items: center;
   justify-content: center;
-  gap: 1.5rem;
+  gap: 1.5rem; /* فاصله بین عناصر */
   width: 100%;
   padding: 1rem;
   height: 100%;
-  overflow-y: auto;
+  overflow-y: auto; /* اسکرول عمودی در صورت نیاز */
+  /* استایل اسکرول‌بار برای مرورگر فایرفاکس */
   scrollbar-width: thin;
   scrollbar-color: var(--accent-color) var(--surface-color);
 }
 
+/* استایل اسکرول‌بار برای مرورگرهای WebKit (کروم، سافاری) */
 .settings-container::-webkit-scrollbar {
     width: 8px;
 }
@@ -81,6 +95,7 @@ body {
     background-color: var(--surface-color);
 }
 
+/* کارت اصلی صفحه تنظیمات */
 .settings-screen {
   display: flex;
   flex-direction: column;
@@ -92,11 +107,13 @@ body {
   max-width: 500px;
 }
 
+/* عنوان صفحه تنظیمات */
 .settings-screen h1 {
   text-align: center;
   color: var(--accent-color);
 }
 
+/* گروه‌بندی فرم‌ها (لیبل و اینپوت) */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -107,6 +124,7 @@ body {
   font-weight: bold;
 }
 
+/* گروه دکمه‌های رادیویی */
 .radio-group {
   display: flex;
   gap: 1rem;
@@ -119,6 +137,7 @@ body {
   cursor: pointer;
 }
 
+/* استایل عمومی اینپوت‌های متنی و عددی */
 .input, .number-input {
   background-color: var(--background-color);
   color: var(--primary-text-color);
@@ -129,27 +148,30 @@ body {
   width: 100%;
 }
 
+/* استایل اینپوت در حالت غیرفعال */
 .input:disabled {
   background-color: var(--disabled-color);
   color: var(--secondary-text-color);
   cursor: not-allowed;
 }
 
-
+/* چینش گرید برای اینپوت‌های نام بازیکنان */
 .player-inputs {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr; /* دو ستون مساوی */
   gap: 1rem;
 }
 
+/* گروه دکمه‌ها (برای انتخاب تعداد بازیکن و تاس) */
 .btn-group {
     display: flex;
     gap: 0.5rem;
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* شکستن دکمه‌ها به خط بعد در صورت کمبود فضا */
 }
 
+/* دکمه‌های انتخابی (مانند تعداد بازیکنان) */
 .btn-choice {
-    flex-grow: 1;
+    flex-grow: 1; /* دکمه‌ها فضای خالی را پر می‌کنند */
     background-color: var(--background-color);
     color: var(--primary-text-color);
     border: 1px solid var(--border-color);
@@ -157,13 +179,14 @@ body {
     padding: 0.75rem;
     font-family: var(--font-family);
     cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
+    transition: background-color 0.2s, border-color 0.2s; /* انیمیشن نرم */
 }
 
 .btn-choice:hover {
     background-color: var(--border-color);
 }
 
+/* استایل دکمه انتخابی در حالت فعال */
 .btn-choice.active {
     background-color: var(--accent-color);
     color: var(--background-color);
@@ -171,7 +194,7 @@ body {
     font-weight: bold;
 }
 
-
+/* استایل عمومی دکمه‌ها */
 .btn {
   background-color: var(--accent-color);
   color: var(--background-color);
@@ -190,55 +213,63 @@ body {
   background-color: var(--accent-color-darker);
 }
 
+/* استایل دکمه‌های ثانویه (مثل دکمه اشتراک‌گذاری) */
 .btn.btn-secondary {
     background-color: transparent;
     color: var(--accent-color);
     border: 2px solid var(--accent-color);
-    width: auto;
+    width: auto; /* عرض خودکار */
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
 }
 
 .btn.btn-secondary:hover {
-    background-color: rgba(3, 218, 198, 0.1);
+    background-color: rgba(3, 218, 198, 0.1); /* افکت هاور با شفافیت */
 }
 
-
-/* Game Board */
+/* =================================== */
+/*              صفحه بازی              */
+/* =================================== */
+/* ساختار گرید اصلی صفحه بازی */
 .game-board {
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-columns: 168px 1fr 168px;
+  /* سه ستون: بازیکن چپ، مرکز، بازیکن راست */
+  grid-template-columns: 218px 1fr 218px;
+  /* سه ردیف: بازیکن بالا، مرکز، بازیکن پایین */
   grid-template-rows: 120px 1fr 120px;
   position: relative;
 }
 
+/* ناحیه مربوط به هر بازیکن */
 .player-area {
   padding: 1rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  transition: all 0.3s;
+  transition: all 0.3s; /* انیمیشن برای تغییرات */
   position: relative;
   border-radius: 10px;
-  gap: 8px;
-  overflow: hidden;
+  gap: 8px; /* فاصله بین عناصر داخلی */
+  overflow: hidden; /* جلوگیری از بیرون زدن محتوا */
   border: 1px solid transparent;
 }
 
+/* استایل بازیکن فعال (نوبت اوست) */
 .player-area.active {
-    background-color: transparent;
+    background-color: transparent; /* بدون پس‌زمینه خاص */
     border-color: transparent;
-    box-shadow: none;
+    box-shadow: none; /* بدون سایه */
 }
 
 .player-area.active .player-name {
-    color: #FFD700;
-    transform: scale(1.15);
+    color: #FFD700; /* رنگ طلایی برای نام بازیکن فعال */
+    transform: scale(1.15); /* کمی بزرگ‌تر برای تاکید */
 }
 
+/* هدر ناحیه بازیکن (شامل نام و امتیاز) */
 .player-header {
     display: flex;
     flex-direction: row;
@@ -248,76 +279,84 @@ body {
     width: 100%;
 }
 
+/* کانتینر نام بازیکن و دکمه‌ها */
 .player-name-container {
     display: flex;
     align-items: center;
     gap: 8px;
 }
+
+/* دکمه نمودار و دکمه درخواست شانس مجدد */
 .btn-chart, .btn-request-chance {
     background: none;
     border: none;
     cursor: pointer;
     font-size: 1.2rem;
     padding: 0;
-    line-height: 1;
+    line-height: 1; /* ارتفاع خط برابر با فونت برای تراز بهتر */
     transition: all 0.2s;
 }
 
-/* Chart button has simple opacity */
+/* دکمه نمودار فقط شفافیت دارد */
 .btn-chart {
     opacity: 0.6;
 }
 .btn-chart:hover {
     opacity: 1;
-    transform: scale(1.1);
+    transform: scale(1.1); /* کمی بزرگنمایی در هاور */
 }
 
-/* Second chance button is stateful */
+/* دکمه شانس مجدد حالت‌های مختلفی دارد */
 .btn-request-chance {
-    opacity: 0.3; /* Inactive by default */
-    min-width: 24px;
-    min-height: 24px;
+    opacity: 0.3; /* به طور پیش‌فرض کم‌رنگ */
+    min-width: 24px; /* حداقل عرض */
+    min-height: 24px; /* حداقل ارتفاع */
     display: inline-flex;
     align-items: center;
     justify-content: center;
 }
 
+/* حالت در دسترس بودن */
 .btn-request-chance.available {
     opacity: 0.8;
 }
 
+/* حالت هاور وقتی در دسترس است */
 .btn-request-chance.available:hover:not(:disabled) {
     opacity: 1;
     transform: scale(1.2);
-    text-shadow: 0 0 6px var(--accent-color);
+    text-shadow: 0 0 6px var(--accent-color); /* درخشش */
 }
 
+/* حالت غیرفعال */
 .btn-request-chance:disabled {
     cursor: not-allowed;
-    /* It will inherit opacity: 0.3 by default */
 }
 
+/* حالت شارژ مجدد (Cooldown) */
 .btn-request-chance.on-cooldown {
     font-size: 1rem;
     font-weight: 700;
     color: var(--secondary-text-color);
-    opacity: 0.6; /* Make it a bit more visible than other disabled states */
+    opacity: 0.6; /* کمی واضح‌تر از حالت غیرفعال عادی */
 }
 
-
+/* نام بازیکن */
 .player-name {
   font-weight: bold;
   font-size: 1.2rem;
-  white-space: nowrap;
+  white-space: nowrap; /* جلوگیری از شکستن نام در دو خط */
   transition: color 0.3s, transform 0.3s ease-in-out;
 }
 
+/* امتیاز بازیکن */
 .player-score {
   font-size: 1.5rem;
   color: var(--accent-color);
   font-weight: bold;
 }
 
+/* جعبه نمایش امتیازات دورهای قبل */
 .scores-box {
     background-color: var(--background-color);
     border-radius: 8px;
@@ -325,20 +364,21 @@ body {
     border: 1px solid var(--border-color);
     width: 100%;
     max-width: 200px;
-    height: 65px;
+    height: 65px; /* ارتفاع ثابت */
 }
 
+/* کانتینر امتیازات دورها */
 .round-scores-container {
     display: flex;
-    flex-wrap: wrap;
-    align-content: flex-start;
+    flex-wrap: wrap; /* شکستن چیپ‌ها به خط بعد */
+    align-content: flex-start; /* چیپ‌ها از بالا شروع شوند */
     gap: 4px;
     height: 100%;
-    overflow-y: auto;
+    overflow-y: auto; /* اسکرول در صورت زیاد بودن امتیازات */
     padding: 4px 0;
     scrollbar-width: thin;
     scrollbar-color: var(--accent-color) var(--surface-color);
-    justify-content: flex-start;
+    justify-content: flex-start; /* چیپ‌ها از راست شروع شوند */
 }
 .round-scores-container::-webkit-scrollbar {
     width: 4px;
@@ -351,7 +391,7 @@ body {
     background: var(--surface-color);
 }
 
-
+/* چیپ نمایش امتیاز هر دور */
 .round-score-chip {
     background-color: var(--surface-color);
     color: var(--secondary-text-color);
@@ -360,22 +400,29 @@ body {
     padding: 2px 8px;
     border-radius: 10px;
     border: 1px solid var(--border-color);
-    animation: pop-in 0.3s ease-out;
-    flex-shrink: 0;
+    animation: pop-in 0.3s ease-out; /* انیمیشن ظاهر شدن */
+    flex-shrink: 0; /* جلوگیری از کوچک شدن چیپ‌ها */
 }
 
+/* چیپ امتیاز جایزه */
 .round-score-chip.bonus {
     background-color: var(--accent-color-darker);
     color: var(--primary-text-color);
     border-color: var(--accent-color);
 }
 
-/* Player Area Rotations */
-.player-1 { grid-area: 3 / 2 / 4 / 3; }
-.player-2 { grid-area: 2 / 1 / 3 / 2; transform: rotate(-90deg); }
-.player-3 { grid-area: 1 / 2 / 2 / 3; transform: rotate(180deg); }
-.player-4 { grid-area: 2 / 3 / 3 / 4; transform: rotate(90deg); }
+/* چیدمان و چرخش نواحی بازیکنان */
+.player-1 { grid-area: 3 / 2 / 4 / 3; } /* پایین */
+.player-2 { grid-area: 2 / 1 / 3 / 2; transform: rotate(-90deg); } /* چپ */
+.player-3 { grid-area: 1 / 2 / 2 / 3; transform: rotate(180deg); } /* بالا */
+.player-4 { grid-area: 2 / 3 / 3 / 4; transform: rotate(90deg); } /* راست */
 
+/* پدینگ سفارشی برای بازیکنان کناری برای استفاده بهتر از فضا */
+.player-2, .player-4 {
+  padding: 0.5rem 1rem;
+}
+
+/* ناحیه مرکزی (تاس‌ها و دکمه‌ها) */
 .center-area {
   grid-area: 2 / 2 / 3 / 3;
   display: flex;
@@ -387,6 +434,7 @@ body {
   position: relative;
 }
 
+/* دکمه خروج */
 .btn-exit {
     position: absolute;
     top: 1rem;
@@ -400,7 +448,7 @@ body {
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
-    z-index: 5;
+    z-index: 5; /* روی بقیه عناصر باشد */
 }
 
 .btn-exit:hover {
@@ -408,6 +456,7 @@ body {
     color: var(--primary-text-color);
 }
 
+/* نمایشگر شماره دور */
 .round-counter {
     position: absolute;
     top: 1rem;
@@ -421,9 +470,10 @@ body {
     z-index: 5;
 }
 
+/* نمایشگر وضعیت شانس مجدد */
 .second-chance-status {
     position: absolute;
-    top: calc(1rem + 38px); /* Below round counter */
+    top: calc(1rem + 38px); /* زیر نمایشگر دور */
     right: 1rem;
     background-color: var(--background-color);
     border: 1px solid var(--border-color);
@@ -435,6 +485,7 @@ body {
     z-index: 5;
 }
 
+/* حالت فعال برای شانس مجدد */
 .second-chance-status.active {
     background-color: var(--accent-color-darker);
     border-color: var(--accent-color);
@@ -442,64 +493,72 @@ body {
     font-weight: bold;
 }
 
-
+/* کانتینر تاس‌ها */
 .dice-container {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 1rem;
-  perspective: 1000px;
-  min-height: 60px;
+  perspective: 1000px; /* برای انیمیشن سه‌بعدی */
+  min-height: 60px; /* حداقل ارتفاع برای جلوگیری از پرش صفحه */
 }
 
+/* استایل هر تاس */
 .dice-face {
   width: 50px;
   height: 50px;
   background-color: var(--primary-text-color);
   border-radius: 8px;
   padding: 6px;
-  box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+  box-shadow: 0 5px 10px rgba(0,0,0,0.3); /* سایه برای عمق */
   position: relative;
 }
 
+/* استایل نقطه‌های روی تاس */
 .dice-face .dot {
   width: 10px;
   height: 10px;
   background-color: var(--background-color);
   border-radius: 50%;
   position: absolute;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%); /* مرکز کردن دقیق نقطه */
 }
 
-
+/* دکمه پرتاب تاس */
 .roll-btn {
   width: 150px;
   height: 50px;
   font-size: 1.2rem;
 }
 
+/* حالت غیرفعال دکمه پرتاب */
 .roll-btn:disabled {
   background-color: var(--disabled-color);
   color: var(--secondary-text-color);
   cursor: not-allowed;
 }
 
+/* ناحیه نمایش پیام‌های بازی */
 .game-info {
     position: absolute;
     bottom: 10px;
     font-size: 1.1rem;
     color: var(--secondary-text-color);
-    height: 2em;
+    height: 2em; /* ارتفاع برای جلوگیری از پرش */
     text-align: center;
 }
 
+/* =================================== */
+/*        پوشش‌ها و مودال‌ها           */
+/* =================================== */
+/* پوشش پایان بازی */
 .game-over-overlay {
-  position: fixed;
+  position: fixed; /* تمام صفحه را می‌پوشاند */
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: rgba(0, 0, 0, 0.8); /* پس‌زمینه نیمه‌شفاف */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -510,6 +569,7 @@ body {
   padding: 1rem;
 }
 
+/* کارت نمایش نتایج */
 .game-over-card {
     background-color: var(--surface-color);
     border-radius: 16px;
@@ -520,9 +580,9 @@ body {
     flex-direction: column;
     gap: 1.5rem;
     border: 1px solid var(--border-color);
-    animation: pop-in 0.4s ease-out;
-    max-height: 85vh;
-    overflow-y: auto;
+    animation: pop-in 0.4s ease-out; /* انیمیشن ورود */
+    max-height: 85vh; /* حداکثر ارتفاع */
+    overflow-y: auto; /* اسکرول در صورت نیاز */
     scrollbar-width: thin;
     scrollbar-color: var(--accent-color) transparent;
 }
@@ -536,7 +596,7 @@ body {
 .game-over-card::-webkit-scrollbar-thumb {
     background-color: var(--accent-color);
     border-radius: 6px;
-    border: 3px solid var(--surface-color);
+    border: 3px solid var(--surface-color); /* حاشیه برای زیبایی */
 }
 
 .game-over-card h2 {
@@ -545,17 +605,19 @@ body {
   margin-bottom: -1rem;
 }
 
+/* اعلامیه برنده */
 .winner-announcement {
     font-size: 1.4rem;
     font-weight: bold;
 }
 
+/* بخش نتایج (برندگان و بازندگان) */
 .results-section {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
     text-align: right;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-color); /* خط جداکننده */
     padding-top: 1rem;
 }
 .results-section h4 {
@@ -564,6 +626,7 @@ body {
     margin-bottom: 0.5rem;
 }
 
+/* خلاصه وضعیت هر بازیکن در پایان بازی */
 .player-summary {
     display: flex;
     justify-content: space-between;
@@ -572,6 +635,7 @@ body {
     border-radius: 8px;
     background-color: var(--background-color);
 }
+/* هایلایت کردن ردیف اول (برنده) */
 .results-section h4:first-of-type + .player-summary {
     background-color: rgba(3, 218, 198, 0.1);
 }
@@ -594,12 +658,14 @@ body {
     font-size: 1.1rem;
     flex-shrink: 0;
 }
+/* جزئیات امتیاز (اصلی و جایزه) */
 .score-detail {
     font-size: 0.8rem;
     color: var(--secondary-text-color);
     margin-right: 0.5rem;
 }
 
+/* کانتینر بج‌ها (مثل شانس مجدد) */
 .badges-container {
     display: flex;
     flex-direction: column;
@@ -616,13 +682,13 @@ body {
     white-space: nowrap;
 }
 .badge.positive {
-    background-color: #FFD700;
+    background-color: #FFD700; /* رنگ مثبت (طلایی) */
 }
 .badge.negative {
-    background-color: #e57373;
+    background-color: #e57373; /* رنگ منفی (قرمز) */
 }
 
-
+/* پوشش دیالوگ تایید */
 .confirm-overlay {
   position: fixed;
   top: 0;
@@ -634,9 +700,10 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 20;
+  z-index: 20; /* بالاتر از صفحه بازی */
 }
 
+/* دیالوگ تایید (مثلاً برای خروج) */
 .confirm-dialog {
   background-color: var(--surface-color);
   padding: 2rem;
@@ -662,29 +729,31 @@ body {
     flex-grow: 1;
 }
 
+/* اعلان جایزه (Toast) */
 .bonus-toast {
     position: fixed;
     top: 20%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%); /* مرکز کردن افقی */
     background-color: var(--accent-color);
     color: var(--background-color);
     padding: 1rem 2rem;
     border-radius: 12px;
     font-size: 1.2rem;
     font-weight: bold;
-    z-index: 100;
-    animation: fade-in-out 2s ease-in-out;
+    z-index: 100; /* بالاتر از همه چیز */
+    animation: fade-in-out 2s ease-in-out; /* انیمیشن ظاهر و پنهان شدن */
     text-align: center;
 }
 
+/* اعلان شانس مجدد */
 .second-chance-prompt {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
     padding: 1rem;
-    background-color: rgba(3, 218, 198, 0.1);
+    background-color: rgba(3, 218, 198, 0.1); /* پس‌زمینه با رنگ تاکیدی */
     border: 1px solid var(--accent-color);
     border-radius: 12px;
     width: 90%;
@@ -698,6 +767,7 @@ body {
     font-size: 1rem;
 }
 
+/* قوانین شانس مجدد */
 .second-chance-prompt .second-chance-rules {
     font-size: 0.8rem;
     color: var(--secondary-text-color);
@@ -712,7 +782,7 @@ body {
     flex-grow: 1;
 }
 
-/* Vote Prompt Overlay */
+/* پوشش رای‌گیری */
 .vote-overlay {
   position: fixed;
   top: 0;
@@ -724,9 +794,10 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 25;
+  z-index: 25; /* بالاتر از دیالوگ تایید */
 }
 
+/* مودال رای‌گیری */
 .vote-prompt {
   background-color: var(--surface-color);
   padding: 1.5rem 2rem;
@@ -748,6 +819,7 @@ body {
     font-size: 1rem;
     margin-bottom: -1rem;
 }
+/* لیست بازیکنان برای رای‌گیری */
 .player-vote-list {
     display: flex;
     flex-direction: column;
@@ -763,13 +835,15 @@ body {
     border-radius: 8px;
     min-height: 50px;
 }
+/* وضعیت رای (بله، خیر، در انتظار) */
 .vote-status {
     font-weight: bold;
 }
-.vote-status.yes { color: #81c784; }
-.vote-status.no { color: #e57373; }
-.vote-status.pending { color: var(--secondary-text-color); }
+.vote-status.yes { color: #81c784; } /* سبز برای بله */
+.vote-status.no { color: #e57373; } /* قرمز برای خیر */
+.vote-status.pending { color: var(--secondary-text-color); } /* خاکستری برای در انتظار */
 
+/* دکمه‌های رای‌گیری */
 .vote-actions {
     display: flex;
     gap: 0.5rem;
@@ -796,8 +870,7 @@ body {
     border-color: #e57373;
 }
 
-
-/* Chart Modal */
+/* پوشش مودال نمودار */
 .chart-overlay {
   position: fixed;
   top: 0;
@@ -808,10 +881,11 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 30;
+  z-index: 30; /* بالاتر از همه مودال‌ها */
   animation: fade-in 0.3s;
 }
 
+/* کانتینر مودال نمودار */
 .chart-container {
   background-color: var(--surface-color);
   border-radius: 12px;
@@ -842,7 +916,7 @@ body {
     padding: 0 0.5rem;
 }
 
-/* SVG Chart Styles */
+/* استایل‌های نمودار SVG */
 .score-chart-svg {
     width: 100%;
     height: auto;
@@ -857,7 +931,7 @@ body {
     text-anchor: middle;
 }
 .chart-label {
-    text-anchor: end;
+    text-anchor: end; /* تراز لیبل‌های محور عمودی */
 }
 .chart-axis-title {
     font-size: 0.9rem;
@@ -877,10 +951,13 @@ body {
     transition: r 0.2s;
 }
 .chart-dot:hover {
-    r: 6;
+    r: 6; /* بزرگ شدن نقطه در هاور */
 }
 
-/* Animation */
+/* =================================== */
+/*             انیمیشن‌ها               */
+/* =================================== */
+/* انیمیشن چرخش تاس */
 @keyframes roll {
   0% { transform: rotateX(0deg) rotateY(0deg); }
   100% { transform: rotateX(720deg) rotateY(720deg); }
@@ -890,30 +967,32 @@ body {
   animation: roll 0.7s ease-out;
 }
 
+/* انیمیشن ظاهر شدن با بزرگنمایی */
 @keyframes pop-in {
     0% { transform: scale(0.5); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
 }
 
+/* انیمیشن محو شدن و ظاهر شدن (Fade) */
 @keyframes fade-in {
     from { opacity: 0; }
     to { opacity: 1; }
 }
 
+/* انیمیشن برای اعلان Toast (ظاهر شدن و سپس محو شدن) */
 @keyframes fade-in-out {
     0%, 100% { opacity: 0; transform: translate(-50%, -20px); }
     10%, 90% { opacity: 1; transform: translate(-50%, 0); }
 }
 
 /* =================================== */
-/*            RESPONSIVE STYLES        */
+/*        استایل‌های واکنش‌گرا        */
 /* =================================== */
 
-
-/* Tablet */
+/* تبلت (عرض بین 601 و 800 پیکسل) */
 @media (max-width: 800px) and (min-width: 601px) {
   .game-board {
-    grid-template-columns: 156px 1fr 156px;
+    grid-template-columns: 203px 1fr 203px;
     grid-template-rows: 110px 1fr 110px;
   }
   .player-area {
@@ -927,30 +1006,33 @@ body {
   .roll-btn { width: 135px; }
 }
 
-
-/* Mobile Portrait */
+/* موبایل (حالت عمودی - Portrait) (عرض کمتر از 600 پیکسل) */
 @media (max-width: 600px) {
-  /* Settings Screen Optimizations */
+  /* بهینه‌سازی صفحه تنظیمات */
   .settings-screen {
     width: 95%;
     padding: 1.5rem 1rem;
     gap: 1.5rem;
   }
   .player-inputs {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* اینپوت‌ها زیر هم قرار می‌گیرند */
   }
   .form-group {
     gap: 0.5rem;
   }
   
-  /* Game Board Optimizations */
+  /* بهینه‌سازی صفحه بازی */
   .game-board {
-    grid-template-columns: 125px 1fr 125px;
+    grid-template-columns: 163px 1fr 163px;
     grid-template-rows: 80px 1fr 80px;
   }
   .player-area {
     padding: 0.5rem 0.25rem;
     gap: 2px;
+  }
+  .player-2, .player-4 {
+    padding: 0.25rem 0.5rem; /* پدینگ سفارشی برای موبایل */
+    align-items: stretch; /* رفع فاصله از کناره‌ها با کشیدن محتوا */
   }
   .player-header {
     gap: 8px;
@@ -986,14 +1068,14 @@ body {
     bottom: 5px;
   }
 
-  /* For side players, prevent children from taking 100% width in a flex-row (post-rotation) */
+  /* برای بازیکنان کناری، از گرفتن عرض 100% توسط فرزندان جلوگیری می‌کند */
   .player-2 .player-header,
   .player-4 .player-header {
     width: auto;
     flex-shrink: 0;
   }
   
-  /* Modals and Overlays Optimizations */
+  /* بهینه‌سازی مودال‌ها و پوشش‌ها */
   .game-over-card { padding: 1.5rem; }
   .game-over-card h2 { font-size: 2rem; }
   .winner-announcement { font-size: 1.2rem; }
@@ -1009,7 +1091,7 @@ body {
     padding: 1.5rem;
   }
 
-  /* Chart mobile optimization */
+  /* بهینه‌سازی مودال نمودار */
   .chart-container {
       width: 95%;
       padding: 0.75rem 1rem 1rem;
@@ -1025,16 +1107,15 @@ body {
   }
 }
 
-/* Mobile Landscape */
+/* موبایل (حالت افقی - Landscape) (ارتفاع کمتر از 500 پیکسل) */
 @media (max-height: 500px) and (orientation: landscape) {
   html, body {
-    /* Reduce base font size for compact landscape view */
-    font-size: 14px;
+    font-size: 14px; /* کاهش اندازه فونت پایه */
   }
 
-  /* Settings Screen */
+  /* صفحه تنظیمات */
   .settings-container {
-    justify-content: flex-start; /* Don't center vertically, allow scrolling */
+    justify-content: flex-start; /* اجازه اسکرول می‌دهد */
     padding-top: 1rem;
   }
   .settings-screen {
@@ -1051,10 +1132,10 @@ body {
     font-size: 1rem;
   }
 
-  /* Game Board */
+  /* صفحه بازی */
   .game-board {
     grid-template-rows: 75px 1fr 75px;
-    grid-template-columns: 140px 1fr 140px;
+    grid-template-columns: 182px 1fr 182px;
   }
   .center-area {
     gap: 0.5rem;
@@ -1078,7 +1159,7 @@ body {
     font-size: 1rem;
   }
   .game-info {
-    position: static; /* Prevent overlap issues */
+    position: static; /* جلوگیری از هم‌پوشانی */
     height: auto;
     font-size: 0.9rem;
     margin-top: 0.25rem;
@@ -1087,6 +1168,10 @@ body {
     padding: 0.5rem;
     gap: 4px;
   }
+  .player-2, .player-4 {
+    padding: 0.25rem 0.5rem; /* پدینگ سفارشی برای حالت افقی موبایل */
+    align-items: stretch; /* رفع فاصله از کناره‌ها با کشیدن محتوا */
+  }
   .scores-box {
     height: 38px;
   }
@@ -1094,7 +1179,7 @@ body {
     padding: 2px 0;
   }
   
-  /* Overlays */
+  /* پوشش‌ها */
   .game-over-card {
     padding: 1rem;
     gap: 1rem;
